@@ -1,0 +1,24 @@
+---
+# -- Termes de messages --
+10: 'nombre '
+11: 'longueur '
+12: 'longueur min '
+13: 'longueur max '
+14: 'vide'
+15: 'non vide'
+16: 'contenant'
+17: 'contenant le texte'
+20: 'seulement parmi les enfants directs'
+21: 'avec les attributs'
+
+Success: 'Succès'
+Failures: 'Échecs'
+Duration: 'Durée'
+PleaseWait: 'Merci de patienter…'
+CodeToTest: 'Code à tester'
+
+# -- Les messages de retour des checks --
+
+4999: |
+  La balise %{tag} a été trouvée avec les données attendues :
+  %{f_data}

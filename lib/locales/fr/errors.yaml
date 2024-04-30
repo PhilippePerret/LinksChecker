@@ -1,0 +1,142 @@
+---
+# -- Erreurs de recette --
+200: |
+  Le fichier recette '%{path}' est introuvable.
+201: |
+  La donnée %{a} n'est pas valide, pour instancier un Checker::Url. Il faudrait soit
+  une URL (conforme) soit un code HTML (valide).
+202: |
+  Le fichier recette ne contient aucune donnée.
+203: |
+  Les données de la recette devraient être une table (Hash) pas un %{c}.
+204: |
+  La recette devrait définir la clé :tests. Elle ne définit que les clés %{ks}.
+205: |
+  Les données :tests devraient être un Array, pas un %{c}.
+206: |
+  La recette doit définir son nom avec la clé :name.
+
+# -- Erreurs de la définition d'un test --
+
+300: |
+  Les données du test devraient être une table Hash, pas un %{c}.
+301: |
+  La table du test devrait définir la propriété :url, qui est la page à atteindre. 
+  Je ne trouve que les propriétés %{ks}.
+302: |
+  L'URL fournie (%{u}) n'est pas valide : %{e}.
+303: |
+  elle doit être définie, pas nil.
+304: |
+  elle doit être un string, pas un %{c}.
+305: |
+  elle doit obligatoirement commencer par 'http' ou 'https'.
+306: |
+  elle ne devrait contenir aucune espace…
+307: |
+  Un test doit définir son nom (dans :name), il ne définit que les clés
+  %{ks}.
+308: |
+  Un test doit définir les checks à faire dans une propriété qui s'appelle
+  justement :checks. Le test ne définit que les propriétés %{ks}…
+309: |
+  Les checks à faire pour le test (:checks) devraient être une liste
+  Array, par un %{c}.
+310: |
+  La redirection %{a} devrait être une chaine de caractères, pas un %{c}.
+311: |
+  La redirection %{a} devrait commencer par 'http[s]'…
+312: |
+  Pour tester la réponse HTTP, il faut donner le nombre attendu, donc il
+  faut donner un Integer, or %{a} est un %{c}. 
+  Par exemple : 404.
+800: |
+  -- INUTILISÉ --
+1000: |
+  L'instanciation de Lazy::Checker::CheckCase nécessite un Lazy::Checker::Url
+  en premier argument. La valeur est %{a}::%{c}.
+1001: |
+  L'instanciation de Lazy::Checker::CheckCase nécessite un Hash en second
+  argument, une table définissant ce cas de test. La valeur est %{a}::%{c}…
+1002: |
+  Les données du CheckCase devraient définir :tag, la balise avec son
+  identifiant et ses classes CSS. Elles ne définissent que :
+  %{ks}.
+1003: |
+  La donnée :tag du check case devrait au moins définir un identifiant (tag#id)
+  ou une classe CSS (tag.css). '%{a}' ne définit ni l'un ni l'autre.
+1004: |
+  Dans la donnée :tag, :count (%{a}) devrait être un nombre, pas un %{c}…
+2000: |
+  Définition de :contains erroné. Doit être une table (définissant au moins
+  :tag), un string (un texte à contenir ou une balise avec identifiant et/ou
+  class CSS) ou une liste de ces éléments. La classe de l'élément, quoi qu'il
+  en soit, ne peut être %{c}.
+
+# --- Les erreurs de check de la page ---
+
+4999: |
+  Aucun élément %{tag} n'a été trouvé alors qu'on en 
+  attendait %{e}.
+5000: |
+  Mauvais compte. On attend %{e} éléments %{tag}. On en a trouvé
+  %{a} dans la page.
+5001: |
+  Le contenu de %{tag} devrait être vide. Mais il contient le texte "%{a}".
+5002: |
+  Le contenu de %{tag} ne devrait pas être vide. Or il l'est.
+5003: |
+  Le contenu de %{tag} ne devrait comporter aucun texte, or 
+  il contient %{a}.
+5004: |
+  Le contenu de %{tag} devrait comporter du texte, or il n'en affiche
+  aucun.
+5010: |
+  On devrait trouver %{tag} contenant %{e}. Les problèmes suivants ont été
+  rencontrés : %{a}.
+5011: |
+  On devrait trouver %{tag} contenant le texte %{e}.
+5020: |
+  devrait contenir la chaine %{e}
+5021: |
+  devrait contenir la tag définie par %{e}
+5030: |
+  devrait définir les attributs
+5031: |
+  attributs manquants ou inégaux : %{e}.
+5032: |
+  le contenu n'est pas assez long. Il devrait faire au moins %{e} caractères,
+  il en fait %{a}.
+5033: |
+  le contenu est trop long. Il devrait faire moins de %{e} caractères, or il
+  en fait %{a}.
+
+5500: |
+  L'URL n'est pas redirigée. Elle aurait dû être redirigée vers
+  %{e}
+5501: |
+  L'URL est redirigée vers la mauvaise adresse. Elle aurait dû être redirigée
+  vers : %{e}
+  Elle est redirigée vers : %{a}.
+5502: |
+  L'HTTP Response attendue n'est pas la bonne…
+  On attendait la réponse : %{e}
+  On a reçu la réponse    : %{a} 
+5503: |
+  Erreur 404. La page %{e} est introuvable.
+6000: |
+  Le premier argument de Lazy::Checker.check doit être du code XML valide.
+  Or, %{se}.
+6001: |
+  %{a} n'est pas un String, c'est un %{c}.
+6002: |
+  un code XML valide se trouve enroulé dans un nœud racine. Ce n'est pas le
+  cas pour %{a}…
+6003: |
+  la donnée est nulle (nil).
+6010: |
+  Le second argument de Lazy::Checker.check doit être une table Hash valide
+  donc un Hash contenant les bonnes clés : %{se}
+6011: |
+  %{a} n'est pas un Hash, c'est un %{c}…
+

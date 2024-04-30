@@ -1,0 +1,41 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    clir (0.24.2)
+      json
+      tty-prompt
+    date (3.3.4)
+    json (2.7.2)
+    mini_portile2 (2.8.6)
+    nokogiri (1.15.6)
+      mini_portile2 (~> 2.8.2)
+      racc (~> 1.4)
+    pastel (0.8.0)
+      tty-color (~> 0.5)
+    racc (1.7.3)
+    timeout (0.4.1)
+    tty-color (0.6.0)
+    tty-cursor (0.7.1)
+    tty-prompt (0.23.1)
+      pastel (~> 0.8)
+      tty-reader (~> 0.8)
+    tty-reader (0.9.0)
+      tty-cursor (~> 0.7)
+      tty-screen (~> 0.8)
+      wisper (~> 2.0)
+    tty-screen (0.8.2)
+    wisper (2.0.1)
+    yaml (0.3.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  clir
+  date
+  nokogiri
+  timeout
+  yaml
+
+BUNDLED WITH
+   2.1.4

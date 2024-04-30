@@ -1,0 +1,24 @@
+---
+# -- Termes de messages --
+10: 'count '
+11: 'length '
+12: 'min length '
+13: 'max length '
+14: 'empty'
+15: 'not empty'
+16: 'containing'
+17: 'containing the string'
+20: 'only as direct child'
+21: 'with attributes'
+
+Success:    'Success'
+Failures:   'Failures'
+Duration:   'Duration'
+PleaseWait: 'Please wait…'
+CodeToTest: 'Code to test'
+
+# -- Les messages de retour des checks --
+
+4999: |
+  %{tag} tag found with expected data:
+  %{f_data}

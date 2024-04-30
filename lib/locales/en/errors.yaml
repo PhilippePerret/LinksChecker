@@ -1,0 +1,137 @@
+---
+# -- Erreurs de recette --
+200: |
+  The recipe file '%{path}' could not be found.
+201: |
+  The data %{a} is not valid for instantiating a Checker::Url. It should 
+  be either a (valid) URL or valid HTML code.
+202: |
+  The recipe file does not contain any data.
+203: |
+  The recipe data should be a table (Hash), not a %{c}.
+204: |
+  The recipe should define the key :tests. It only defines the keys %{ks}.
+205: |
+  The :tests data should be an Array, not a %{c}.
+206: |
+  The recipe should define its name with the key :name.
+
+# -- Errors in test definition. --
+
+300: |
+  The test data should be a Hash table, not a %{c}.
+301: |
+  The test table should define the :url property, which is the page to reach.
+  I only find the %{ks} properties.
+302: |
+  The provided URL (%{u}) is not valid: %{e}.
+303: |
+  it must be defined, not nil.
+304: |
+  it must be a string, not a %{c}.
+305: |
+  it must start with 'http' or 'https' necessarily.
+306: |
+  it should not contain any spaces.
+307: |
+  A test must define its name (in :name); it only defines the keys %{ks}.
+308: |
+  A test must define the checks to perform in a property called, specifically, 
+  :checks. The test only defines the %{ks} properties.
+309: |
+  The checks to be performed for the test (:checks) should be a list (Array), 
+  not a %{c}.
+310: |
+  The redirection %{a} should be a string, not a %{c}.
+311: |
+  The redirection %{a} should start with 'http[s]'.
+312: |
+  To test the HTTP response, you must provide the expected status code, which should 
+  be an Integer. However, %{a} is a %{c}.
+  For example, you can use: 404.
+800: |
+  -- UNUSED --
+1000: |
+  Lazy::Checker::CheckCase instanciation requires a Lazy::Checker::Url (first argument).
+  Actual value is %{a}::%{c}.
+1001: |
+  Lazy::Checker::CheckCase instanciation requires a Hash (second argument).
+  Actual value is %{a}::%{c}.
+1002: |
+  CheckCase data should define :tag value (tag name with at least id or css class).
+  They only define : %{ks}.
+1003: |
+  :tag value of the CheckCase data should define at least a id (tagName#id) or a css 
+  class (tagName.css_class). '%{a}' defines neither.
+1004: |
+  In the :tag data, :count (%{a}) should be a number, not a %{c}.
+2000: |
+  The definition of :contains is incorrect. It should be a table (defining at 
+  least :tag), a string (text to be contained or a tag with an identifier and/or 
+  CSS class), or a list of these elements. The class of the element, in any case, 
+  cannot be %{c}.
+
+# --- Errors in page check. ---
+
+4999: |
+  No %{tag} element was found when %{e} were expected.
+5000: |
+  Wrong count. We expected %{e} %{tag} elements, but found %{a} on the page.
+5001: |
+  The content of %{tag} should be empty, but it contains the text 
+  "%{a}".
+5002: |
+  The content of %{tag} should not be empty, but it is.
+5003: |
+  The content of %{tag} should not contain any text, but it 
+  contains %{a}.
+5004: |
+  The content of %{tag} should contain text, but it doesn't display any.
+5010: |
+  We should find %{tag} containing %{e}. The following issues were 
+  encountered: %{a}.
+5011: |
+  We should find %{tag} containing the text %{e}.
+5020: |
+  should contain the string %{e}
+5021: |
+  should contain the tag defined by %{e}
+5030: |
+  should define the attributes
+5031: |
+  missing or unequal attributes: %{e}.
+5032: |
+  the content is not long enough. It should be at least %{e} characters long, 
+  but it is %{a} characters long.
+5033: |
+  the content is too long. It should be less than %{e} characters, but it 
+  is %{a} characters long.
+
+5500: |
+  The URL is not redirected. It should have been redirected to 
+  %{e}.
+5501: |
+  The URL is redirected to the wrong address. It should have been redirected to: %{e}.
+  It is redirected to: %{a}.
+5502: |
+  The expected HTTP Response is not correct...
+  We were expecting the response: %{e}
+  We received the response: %{a}
+5503: |
+  Error 404. The page %{e} could not be found.
+6000: |
+  The first argument of Lazy::Checker.check must be valid XML code. 
+  However, %{se}.
+6001: |
+  %{a} is not a String; it's a %{c}.
+6002: |
+  a valid XML code should be wrapped in a root node. This is not the case 
+  for %{a}.
+6003: |
+  the data is null (nil).
+6010: |
+  The second argument of Lazy::Checker.check must be a valid Hash table, containing
+  the correct keys: %{se}.
+6011: |
+  %{a} is not a Hash; it's a %{c}.
+
