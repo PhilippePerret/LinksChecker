@@ -67,7 +67,12 @@ class Url
   
   def readit
     if uri_string.start_with?('http')
-      uri = URI(uri_string)
+      begin
+        uri = URI(uri_string)
+      rescue URI::InvalidURIError => e
+        @rvalue = "URL invalide : #{e.message}"
+        return
+      end
       begin
         response = Net::HTTP.get_response(uri)
       rescue SocketError => e

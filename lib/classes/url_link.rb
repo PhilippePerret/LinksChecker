@@ -13,7 +13,7 @@ class Link
   # Pour checker si cette page existe
   # 
   def check
-    Checker.check(uri)
+    Checker.check(uri, **{owner: url})
   end
 
   def uri

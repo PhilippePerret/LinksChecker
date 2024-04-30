@@ -6,13 +6,16 @@ class Checker
   ##
   # Méthode principale qui checker TOUS les liens
   # 
-  def self.check(uri)
+  # @param params [Hash]
+  #   owner: [LinksChecker::Url] La page propriétaire du lien uri
+  # 
+  def self.check(uri, **params)
     uri = uri[0..-2] if uri.end_with?('/')
     # 
     # On ne fouille que les pages de même origine
     # On ne fouille pas les scripts et les css
     # 
-    if not(LinksChecker.same_base?(uri)) || LinksChecker.bad_extension?(uri)
+    if LinksChecker.bad_protocol?(uri) || not(LinksChecker.same_base?(uri)) || LinksChecker.bad_extension?(uri)
       STDOUT.write POINT_GRIS
       return false
     end
@@ -33,7 +36,7 @@ class Checker
       res = nil
       begin
         Timeout.timeout(20, TimeoutError) do
-          CHECKED_LINKS.merge!(uri => {url: url, checker: checker, count: 1, ok: "-en cours de test-"})
+          CHECKED_LINKS.merge!(uri => {url: url, owner: params[:owner], checker: checker, count: 1, ok: "-en cours de test-"})
           res = checker.check_links
         end
       rescue TimeoutError => e
@@ -64,14 +67,23 @@ class Checker
   # Affiche le rapport de check du lien 
   # 
   def display_report
-    puts "\n---"
-    puts "Nombre de liens checkés : #{CHECKED_LINKS.count}".bleu
+    puts "\n---".bleu
+    nombre_total = 0
+    CHECKED_LINKS.values.each {|d| nombre_total += d[:count] }
+    puts "Nombre de liens différents vérifiés  : #{CHECKED_LINKS.count}".bleu
+    puts "Nombre total de liens HREF consultés : #{nombre_total}".bleu
     bad_links = CHECKED_LINKS.values.reject do |durl|
       durl[:ok]
     end
-    puts "Liens erronés : #{bad_links.count}"
-    bad_links.each do |durl|
-      puts "- #{durl[:url].uri_string}".rouge
+    if bad_links.count > 0
+      puts "NOMBRE DE LIENS ERRONÉS : #{bad_links.count}".rouge
+      bad_links.each do |durl|
+        puts "- #{durl[:url].uri_string}".rouge
+        puts "  (dans #{durl[:owner].uri_string})".gris
+      end
+      puts "\nCes liens sont à corriger."
+    else
+      puts "Tous les liens sont valides.".vert
     end
   end
 
