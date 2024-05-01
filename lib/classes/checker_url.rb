@@ -14,8 +14,20 @@ class Url
   def initialize(uri)
     uri = uri.strip
     uri = uri[0..-2] if uri.end_with?('/')
+    uri = immediate_transformations(uri)
     @uri_string = uri.strip
+  end
 
+  GOOD_YT_LINKS = 'https://www.youtube.com/watch?v=%{ytid}'.freeze
+
+  # Certains liens qu’on connait, comme ceux vers une vidéo youtube
+  # peuvent être transformés tout de suite.
+  def immediate_transformations(uri)
+    if uri.start_with?('https://youtu.be')
+      ytid = uri.split('/').last
+      uri = GOOD_YT_LINKS % {ytid: ytid}
+    end
+    return uri
   end
 
   # @return Nokogiri Document
@@ -35,6 +47,12 @@ class Url
   end
 
   # -- Predicate Methods --
+
+  # @return true si ce lien est sur la même base (donc si c’est une
+  # page du site checké)
+  def same_base?
+    LinksChecker.same_base?(uri_string)
+  end
 
   # @return true si la page a pu être chargée correctement
   def ok?

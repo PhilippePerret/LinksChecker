@@ -1,7 +1,10 @@
 module LinksChecker
 class Checker
 
-  CHECKED_LINKS = {}
+  # Pour mettre les href traités
+  CHECKED_LINKS   = {}
+  # Pour mettre les href exclus
+  EXCLUDED_LINKS  = {}
 
   ##
   # Méthode principale qui checker TOUS les liens
@@ -15,7 +18,16 @@ class Checker
     # On ne fouille que les pages de même origine
     # On ne fouille pas les scripts et les css
     # 
-    if LinksChecker.bad_protocol?(uri) || not(LinksChecker.same_base?(uri)) || LinksChecker.bad_extension?(uri)
+    begin
+      if LinksChecker.bad_protocol?(uri) 
+        raise "protocol"
+      elsif LinksChecker.bad_extension?(uri)
+        raise "extension"
+      elsif LinksChecker.excluded_base?(uri)
+        raise "autre site"
+      end
+    rescue Exception => e
+      EXCLUDED_LINKS.merge!(uri => {raison: e.message})
       STDOUT.write POINT_GRIS
       return false
     end
@@ -37,11 +49,15 @@ class Checker
       begin
         Timeout.timeout(20, TimeoutError) do
           CHECKED_LINKS.merge!(uri => {url: url, owner: params[:owner], checker: checker, count: 1, ok: "-en cours de test-"})
-          res = checker.check_links
+          res = url.ok?
+          # On ne teste ses liens que s’il est sur le site
+          if res && url.same_base?
+            res = checker.check_links
+          end
         end
       rescue TimeoutError => e
         res = false
-        CHECKED_LINKS[uri].merge!(error: "timeout")
+        CHECKED_LINKS[uri].merge!(error: "-timeout-")
       end
       CHECKED_LINKS[uri].merge!(ok: res, error: checker.error)
       STDOUT.write res ? POINT_VERT : POINT_ROUGE
@@ -68,6 +84,7 @@ class Checker
   # 
   def display_report
     puts "\n---".bleu
+    puts "RÉSULTATS\n---------".bleu
     nombre_total = 0
     CHECKED_LINKS.values.each {|d| nombre_total += d[:count] }
     puts "Nombre de liens différents vérifiés  : #{CHECKED_LINKS.count}".bleu
@@ -83,8 +100,21 @@ class Checker
       end
       puts "\nCes liens sont à corriger."
     else
-      puts "Tous les liens sont valides.".vert
+      puts "🎉 TOUS LES LIENS SONT VALIDES. 👍".vert
     end
+
+    if verbose?
+      puts "---\nLIENS VÉRIFIÉS\n#{'-'*14}".jaune
+      CHECKED_LINKS.each do |uri, duri|
+        deep = duri[:url].same_base? ? " [deep]" : ""
+        puts "- #{uri}#{duri[:error] ? " (#{duri[:error]})" : ""}#{deep}".send(duri[:ok] ? :vert : :rouge)
+      end
+      puts "\nHREF EXCLUS\n#{'-'*11}".jaune
+      EXCLUDED_LINKS.each do |href, dhref|
+        puts "- #{href} (#{dhref[:raison]})".orange
+      end
+    end
+
   end
 
   # @return true si le lien n’a pas été trouvé
