@@ -2,6 +2,7 @@
 LIB_FOLDER  = __dir__
 APP_FOLDER  = File.dirname(LIB_FOLDER)
 LOCALE_PATH = File.join(LIB_FOLDER,'locales')
+MODULES_PATH = File.join(LIB_FOLDER,'modules')
 
 LANG = 'fr'
 

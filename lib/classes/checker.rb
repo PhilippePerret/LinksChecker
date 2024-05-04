@@ -95,7 +95,8 @@ class Checker
     if bad_links.count > 0
       puts "NOMBRE DE LIENS ERRONÉS : #{bad_links.count}".rouge
       bad_links.each do |durl|
-        puts "- #{durl[:url].uri_string}".rouge
+        url = durl[:url]
+        puts "- #{url.uri_string} (#{url. class_error} #{url.rvalue})".rouge
         puts "  (dans #{durl[:owner].uri_string})".gris
       end
       puts "\nCes liens sont à corriger."

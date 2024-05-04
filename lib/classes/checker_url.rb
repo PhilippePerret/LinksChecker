@@ -6,7 +6,13 @@ class Url
 
   attr_reader :uri_string
   alias :base :uri_string
-  
+
+  # @return la response.value et la classe de l’erreur
+  # @note Il faut que #code_html ou #read ait été appelé avant pour
+  # que ces valeurs soient définies
+  attr_reader :rvalue, :class_error
+
+
   # Instanciation d'un test
   # 
   # @param uri [String] URL ou code
@@ -40,7 +46,7 @@ class Url
   def links
     nokogiri.css("*[href]").map do |node|
       href = node.attribute('href').to_s
-      href = href.split('?')[0] if href.match?(/\?/)
+      # href = href.split('?')[0] if href.match?(/\?/) # On garde les query-string
       href = href.split('#')[0] if href.match?(/\#/)
       Link.new(self, href)
     end
@@ -73,48 +79,91 @@ class Url
     @redirect_to
   end
 
-  # @return la response.value
-  # @note Il faut que #code_html ou #read ait été appelé avant
-  def rvalue
-    @rvalue
-  end
 
   def code_html
     @code_html ||= readit
   end
   
   def readit
+
     if uri_string.start_with?('http')
+      #
+      # Une URI valide avec le bon protocole 'http'
+      # 
+
+      # Si c’est une adresse Amazon, il faut utiliser Selenium
+      # car Amazon ne laisse pas atteindre ses pages sans passer
+      # par un navigateur
+      if uri_string.start_with?('https://www.amazon.')
+        asin = uri_string.split('/').last
+        require "#{MODULES_PATH}/Amazon_checker"
+        if Amazon::AsinChecker.check(asin)
+          # OK
+          @rvalue = "200"
+          return "<Page Amazon Atteinte>"
+        else
+          # Not OK
+          @rvalue = "404 Page Amazon introuvable"
+          return
+        end
+      end
+
+      # Un URI normale
       begin
         uri = URI(uri_string)
       rescue URI::InvalidURIError => e
         @rvalue = "URL invalide : #{e.message}"
         return
       end
+      
       begin
         response = Net::HTTP.get_response(uri)
       rescue SocketError => e
         @rvalue = e.message.match(/([4][0-9][0-9])/).to_a[1].to_i
+        @class_error = "SocketError"
         return
       rescue Net::HTTPServerException => e
         @rvalue = e.message.match(/([4][0-9][0-9])/).to_a[1].to_i
+        @class_error = "Net::HTTPServerException"
         return
       rescue Net::HTTPClientException => e
         @rvalue = e.message.match(/([4][0-9][0-9])/).to_a[1].to_i
+        @class_error = "Net::HTTPClientException"
         return
       end
+
       begin
-        @rvalue = response.value
+
+        # Pour laisser sa chance à CURL
+        begin
+          @rvalue = response.value
+        rescue Exception => e
+          # -I => seulement l’entête
+          # -L => suivre les redirections
+          # -k => apparemment, pour https, mais ça semble marcher sans
+          res = `cUrl -k -I -L #{uri_string}`
+          raise e if res.match?(/HTTP\/[0-9] 404/) || res.match?(/Error 404/)
+          return # ok
+        end
+
+      rescue Net::HTTPFatalError => e
+        @rvalue = e.message.match(/([0-7][0-9][0-9])/).to_a[1].to_i
+        @class_error = "Net::HTTPFatalError"
+        return
       rescue Net::HTTPRetriableError => e
         @rvalue = e.message.match(/([0-7][0-9][0-9])/).to_a[1].to_i
+        @class_error = "Net::HTTPRetriableError"
         return
       rescue Net::HTTPServerException => e
         @rvalue = e.message.match(/([4][0-9][0-9])/).to_a[1].to_i
+        @class_error = "Net::HTTPServerException"
         return
       rescue Net::HTTPClientException => e
         @rvalue = e.message.match(/([4][0-9][0-9])/).to_a[1].to_i
+        @class_error = "Net::HTTPClientException"
         return
       end
+
       case response
       when Net::HTTPSuccess
         body = response.body # toute la page html
@@ -140,7 +189,7 @@ class Url
       else
         return nil
       end
-    elsif uri_string.start_with?('<') and uri_string.end_with?('>')
+    elsif uri_string.start_with?('<') && uri_string.end_with?('>')
       uri_string
     else
       raise ArgumentError.new(ERRORS[201] % {a:uri_string.inspect})
