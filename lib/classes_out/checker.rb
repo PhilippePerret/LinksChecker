@@ -1,8 +1,6 @@
 module LinksChecker
 class Checker
 
-  # Pour mettre les href traités
-  CHECKED_LINKS   = {}
 
   ##
   # Méthode principale qui checker TOUS les liens

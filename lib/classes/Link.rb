@@ -7,24 +7,32 @@ class Link
   # query-string exact) pour vraiment considérer comme page 
   # différente des pages qui n’ont pas les mêmes paramètres.
   # 
-  # @count permet de savoir combien de fois elle a été appelée
+  # count permet de savoir combien de fois elle a été appelée
   # 
 
   # [Array[LinksChecker::Link]] Array de URI de toutes les sources 
   # qui contiennent ce lien.
   attr_reader :sources
 
+  # [String] La base du lien, qui peut être défini dans la page
+  # Dans le cas contraire, c’est la base LinksChecker@base.
+  attr_reader :base
+
   # [String] L’URI initial. C’est @uri qui contient la vraie 
   # adresse à prendre en compte
   attr_reader :ini_uri
 
-  # [Integer] Le nombre de fois où ce lien a été appelé
-  attr_reader :count
+  # [Boolean] True si le lien est OK
+  attr_reader :success
+  # [String|NilClass] L’erreur rencontrée (if any)
+  attr_reader :error
+  # [String|NilClass] Contient la raison de l’inaccessibilité du lien
+  attr_reader :inaccessibility
 
-  def initialize(ini_uri, source)
-    @sources  = [source]
+  def initialize(ini_uri, base, source)
+    @sources      = [source]
+    @base     = base
     @ini_uri  = ini_uri
-    @count    = 1
   end
 
   ##
@@ -34,11 +42,10 @@ class Link
   # une page contenant d’autres liens ?)
   # 
   def check
-    puts "Je dois apprendre à checker #{url.inspect}".jaune
-
-    @inaccessibility = nil
+    @success = false # par défaut
+    @inaccessibility = nil # par défaut
     
-    uri = URI("https://www.atelier-icare.net/icare_editions_dev/")
+    uri = URI(url)
     begin
       response = Net::HTTP.get_response(uri)
     rescue SocketError => e
@@ -49,7 +56,34 @@ class Link
     # Étude de la réponse
     case response
     when Net::HTTPSuccess
-      get_all_links_in(response)
+      # 
+      # Cet lien a retourné un succès, c’est-à-dire que la page
+      # a pu être chargée. Mais ça n’est pas forcément la page
+      # attendue. Pour ça, il faut vérifier si les sélecteurs définis
+      # par les paramètres (--exclude et --require) sont bien 
+      # présents ou absents. C’est l’instance [Link::Page] qui s’en
+      # charge, évidemment.
+      # @note: response.body contient tout le code HTML, en fait
+      @page = Page.new(self, response.body)
+      if (error = LinksChecker.page_invalid?(@page))
+        @error = error
+      else
+        # 
+        # === SUCCÈS ===
+        # 
+        # (on peut checker ses liens — sauf si c’est un controle 
+        # "flat" — pas "deep" et que la source de ce lien n’est pas
+        # nil)
+        @success = true
+        if not(App.option?(:flat)) || source.nil?
+          page.get_and_check_all_links_in_code
+        else
+          puts "On ne check pas les liens car :"
+          puts "la source n’est pas nil (#{source.inspect}" unless source.nil?
+          puts "L’option :flat n’est pas activée" unless App.option?(:flat)
+          sleep 5
+        end
+      end
     when Net::HTTPMovedPermanently
       @inaccessibility = "Déplacer de façon permanente."
     when Net::HTTPNotFound
@@ -59,7 +93,7 @@ class Link
       puts "La réponse est de type #{response.class}".rouge
     end
 
-    true # <==== TODO
+    @success
   end
 
 
@@ -69,30 +103,18 @@ class Link
     @inaccessibility == nil
   end
 
+  def success?
+    success === true
+  end
+
   # -- Links Methods --
 
-  # @main
-  # 
-  # Récupère tous les liens (HREF) de la page
-  # 
-  # @param response [Net::HTTPOK] La réponse à la requête url
-  #                               courante
-  def get_all_links_in(response)
-    puts "Classe : #{response.class}"
-    puts "BODY:\n#{response.body}"
-    # @note: response.body contient tout le code HTML, en fait
-    response.body.scan(/href="(.+?)"/i).each do |find|
-      href = find[0]
-      thelink = Link.new(href, self)
-      if (err = self.class.href_uncheckable?(href)).nil?
-        puts "Bon: #{href}".vert
-      else
-        EXCLUDED_LINKS << thelink
-        puts "Bad: #{href} (#{err})".rouge
-      end
-    end
 
-  end
+  # -- Link’s Page Data --
+
+  # [Link::Page|NilClass] Page HTML du lien
+  # Elle n’existe que si la page a pu être atteinte
+  def page; @page end
 
   def self.href_uncheckable?(href)
     if href.start_with?('mailto:')
@@ -130,9 +152,14 @@ class Link
         cuni = cuni[1..-1] if cuni.start_with?('.')
         cuni = cuni[1..-1] if cuni.start_with?('/')
         cuni = cuni.split('#')[0]
-        File.join(LinksChecker.base, cuni)
+        File.join(base, cuni)
       end.freeze
     end
   end
+
+  def count
+    sources.count
+  end
+
 end #/class Link
 end #/module LinksChecker

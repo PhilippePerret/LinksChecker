@@ -43,7 +43,7 @@ class << self
     # uri = Q.ask("URL à checker : ".jaune, **{default:'https://rien.com'})
     begin
       LinksChecker.check_all_links_from(uri)
-      display_report
+      LinksChecker.display_report
     rescue Interrupt => e
       report_on_interrupt
     rescue Exception => e
@@ -58,11 +58,7 @@ class << self
   # Affiche le rapport de check du lien 
   # 
   def display_report
-    puts "J’afficherai le rapport plus tard.".jaune
-    return
 
-    puts "\n---".bleu
-    puts "RÉSULTATS\n---------".bleu
     nombre_total = 0
     CHECKED_LINKS.values.each {|d| nombre_total += d[:count] }
     puts "Nombre de liens différents vérifiés  : #{CHECKED_LINKS.count}".bleu

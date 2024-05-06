@@ -23,28 +23,48 @@ class << self
   def check_all_links_from(uri)
 
     # La page de départ
-    source = LINKS_TO_CHECK << Link.new(uri, nil)
-    
+    add_link_to_check(uri, base, nil)
+
     while link = LINKS_TO_CHECK.shift
       break if link.nil?
-      link.check
-      # Si l’option :flat (not :deep) est active et que
-      # le lien n’est pas dans la source, on passe à la
-      # suite. Note : peut-être qu’on pourrait tout de suite
-      # breaker, mais je ne suis pas sûr que les liens se mettent
-      # toujours dans l’ordre voulu, donc prudence.
-      next if App.option?(:flat) && not(link.sources.include?(source))
+      if CHECKED_LINKS.key?(link.url)
+        # HREF déjà connu
+        first_link = CHECKED_LINKS[link.url]
+        first_link.sources << link.source
+        next
+      else
+        CHECKED_LINKS.merge!(link.url => link)
+        # On doit checker ce lien
+        link.check
+      end
     end
 
   end
 
   # Pour ajouter un lien à checker
   # 
-  def add_link_to_check(uri, source)
-    link = Link.new(uri, source)
+  def add_link_to_check(uri, base, source)
+    link = Link.new(uri, base, source)
     LINKS_TO_CHECK << link
     return link
   end
+
+  # Pour afficher le résultat final
+  # 
+  def display_report
+    puts "\n---".bleu
+    puts "RÉSULTATS\n---------".bleu
+    puts "Nombre de liens checkés : #{CHECKED_LINKS.count}".bleu
+    puts "\n---".bleu
+    puts "LIENS CHECKÉS\n#{'-'*13}".bleu
+    CHECKED_LINKS.each do |url, link|
+      puts "- #{url}".send(link.success? ? :vert : :rouge)
+      unless link.success?
+        puts "  #{link.error}".rouge
+      end
+    end    
+  end
+
 
   # Définir la base de la recherche, qui n’est pas forcément la
   # base (HOST) du site.
@@ -69,6 +89,30 @@ class << self
 
   # -- Predicate Methods --
 
+  # @param page [Link::Page] Instance de la link-page à checker
+  #             Elle est valide si elle contient les sélecteurs
+  #             requis et si elle ne contient pas les sélecteurs à
+  #             ne pas trouver.
+  # @rappel
+  #   Les requis sont définis par -r/--require
+  #   Les exclus sont définis par -e/--exclude
+  def page_invalid?(page)
+    if (selectors_requis = App.options[:require])
+      # Si un seul sélecteur n’est pas trouvé, on retourne faux
+      selectors_requis.each do |selector|
+        return "Sélecteur introuvable : #{selector.inspect}" if not(page.contains?(selector))
+      end
+    end
+    if (selectors_error = App.options[:exclude])
+      # Si un seul sélecteur est trouvé, on retourne faux
+      selectors_error.each do |selector|
+        return "Sélecteur indésirable : #{selector.inspect}" if page.contains?(selector)
+      end
+    end
+    return nil
+  end
+
+
   def bad_extension?(uri)
     file = uri.split('/').last
     ext  = File.extname(file)
@@ -87,10 +131,10 @@ class << self
     return false
   end
 
-  def bad_protocol?(uri)
-    last = uri.split('/').last
-    return BAD_PROTOCOLS[last.split(':')[0]]
-  end
+  # def bad_protocol?(uri)
+  #   last = uri.split('/').last
+  #   return BAD_PROTOCOLS[last.split(':')[0]]
+  # end
 
 end #/ << self LinksChecker
 
