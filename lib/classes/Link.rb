@@ -30,9 +30,17 @@ class Link
   attr_reader :inaccessibility
 
   def initialize(ini_uri, base, source)
-    @sources      = [source]
     @base     = base
     @ini_uri  = ini_uri
+    # Les sources qui sont identiques
+    # (pas sûr que ça serve à quelque chose)
+    @sources  = [] 
+    if source.nil?
+      @isorigine = true
+    else
+      @isorigine = false
+      @sources << source unless source.nil?
+    end
   end
 
   ##
@@ -75,11 +83,11 @@ class Link
         # "flat" — pas "deep" et que la source de ce lien n’est pas
         # nil)
         @success = true
-        if not(App.option?(:flat)) || source.nil?
+        if not(App.option?(:flat)) || origine?
           page.get_and_check_all_links_in_code
         else
           puts "On ne check pas les liens car :"
-          puts "la source n’est pas nil (#{source.inspect}" unless source.nil?
+          puts "la source n’est pas nil (#{sources.inspect}" unless sources.nil?
           puts "L’option :flat n’est pas activée" unless App.option?(:flat)
           sleep 5
         end
@@ -105,6 +113,12 @@ class Link
 
   def success?
     success === true
+  end
+
+  # @return true si c’est le premier lien envoyé
+  # (pour savoir, quand c’est :flat, s’il faut traiter ses liens)
+  def origine?
+    :TRUE === @isorigine
   end
 
   # -- Links Methods --

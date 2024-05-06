@@ -30,7 +30,7 @@ class << self
       if CHECKED_LINKS.key?(link.url)
         # HREF déjà connu
         first_link = CHECKED_LINKS[link.url]
-        first_link.sources << link.source
+        first_link.sources << link.sources.first
         next
       else
         CHECKED_LINKS.merge!(link.url => link)

@@ -33,9 +33,7 @@ class Page
   # et de les injecter dans les liens à contrôler
   # 
   def get_and_check_all_links_in_code
-    puts "html.css(body): #{html.css("body")}"
-    exit 12
-    html.css("body").css("*[href]").map do |node|
+    html.css("BODY,body").css("*[href]").map do |node|
       href = node.attribute('href').to_s
       href = href.split('#')[0] if href.match?(/\#/)
       # Link.new(href, base, owner_link)
@@ -57,7 +55,8 @@ class Page
   # -- Predicate Methods --
 
   def contains?(selector)
-    return html.css("body").css(selector).empty?  
+    res = html.css("BODY,body").css(selector)
+    return not(res.empty?)
   end
 
   # -- Data Methods --
