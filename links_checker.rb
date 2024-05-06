@@ -3,7 +3,7 @@
 
 begin
   require_relative 'lib/required'
-  LinksChecker.run
+  LinksChecker::App.run
 rescue Exception => e
   puts e.class
   if "".respond_to?(:rouge)

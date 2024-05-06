@@ -1,0 +1,70 @@
+La commande #{j'check-links'} permet de vérifier la validité des
+liens d’un site internet.
+
+Arguments
+---------
+
+On peut mettre en premier argument l’adresse (URL) du site. Par
+exemple : #{j'check-links https://www.atelier-icare.net'}.
+
+l’URI peut être aussi un fichier précis, de type HTML, ruby ou
+asp par exemple.
+
+Options
+-------
+
+  #{j'-i/--infos <fichier>'} Toutes les données de check sont
+    contenus dans le fichier <fichier>. Elles peuvent être mises
+    ligne sur ligne, en sachant que la première doit toujours 
+    contenir l’URI si elle est fournie. Voir plus bas un exemple.
+
+  #{j'-f/--flat'} Pour ne traiter que la page spécifiée, donc
+      le contaire d’un contrôle “deep”.
+
+  #{j'-v/--verbose'} 
+     En fin de processus, "affiche" toutes les URI traitées.
+     En mode verbose, lorsque la liste des liens vérifié est
+     affichée, on indique par "[deep]" le fait qu’on vérifie
+     aussi la page du lien pour voir les href qu’elle contient.
+
+  #{j'-e/--exclude \'<selector>\''} 
+      Si le sélecteur spécifié est trouvé, on considère que la
+      page est mauvaise. C’est par exemple une balise qui indique
+      qu’un message d’erreur est affiché.
+      Ajouter autant d’options que de sélecteur voulus. Par exemple,
+      si on doit exclure div.warning et div.error, on ajoute en 
+      options : #{j'-e \'.warning\' -e \'.error\' '} 
+
+
+  #{j'-r/--require \'<selector>\''} 
+      Un ou plusieurs sélecteurs qu’il faut absolument trouver dans
+      la page pour considérer qu’elle est bonne. Ça peut être par
+      exemple le logo du site.
+      Ajouter autant d’options que de sélecteurs requis :
+      #{j'-r \'.logo\' -e \'.content.main\' '} 
+
+
+Exemple avec fichier d’infos
+----------------------------
+
+Si la commande est #{j'check-links -i checklinks.txt'} alors le
+fichier "checklinks.txt" peut contenir les données à prendre en 
+compte.
+Ce fichier contient par exemple :
+
+————————————————————————————————————————————
+https://www.atelier-icare.net
+-r section#header
+-r section#footer
+-e div.warning
+-e div.error
+-f
+-v
+————————————————————————————————————————————
+
+… ce qui signifie que c’est la page d’accueil de l’atelier qui sera
+checkée, et seulement la page d’accueil (#{j'-f/--flat'}). Pour que la page
+soit valide, elle doit contenir les sélecteurs "section#header" et 
+"section#footer" (#{j'-r/--required'}) et elle ne doit pas avoir de sélecteur
+"div.warning" ou "div.error" (#{j'-e/--exclude'}).
+Et le résultat sera affiché en détail (#{j'-v/--verbose'}).

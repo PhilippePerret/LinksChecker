@@ -3,8 +3,6 @@ class Checker
 
   # Pour mettre les href traités
   CHECKED_LINKS   = {}
-  # Pour mettre les href exclus
-  EXCLUDED_LINKS  = {}
 
   ##
   # Méthode principale qui checker TOUS les liens
@@ -50,7 +48,8 @@ class Checker
         Timeout.timeout(20, TimeoutError) do
           CHECKED_LINKS.merge!(uri => {url: url, owner: params[:owner], checker: checker, count: 1, ok: "-en cours de test-"})
           res = url.ok?
-          # On ne teste ses liens que s’il est sur le site
+          # On ne teste ses liens que si la page appartient à la
+          # base et que l’option --flat (-f) n’est pas utilisée
           if res && url.same_base?
             res = checker.check_links
           end
@@ -77,45 +76,6 @@ class Checker
   # 
   def initialize(url)
     @url = url
-  end
-
-  ##
-  # Affiche le rapport de check du lien 
-  # 
-  def display_report
-    puts "\n---".bleu
-    puts "RÉSULTATS\n---------".bleu
-    nombre_total = 0
-    CHECKED_LINKS.values.each {|d| nombre_total += d[:count] }
-    puts "Nombre de liens différents vérifiés  : #{CHECKED_LINKS.count}".bleu
-    puts "Nombre total de liens HREF consultés : #{nombre_total}".bleu
-    bad_links = CHECKED_LINKS.values.reject do |durl|
-      durl[:ok]
-    end
-    if bad_links.count > 0
-      puts "NOMBRE DE LIENS ERRONÉS : #{bad_links.count}".rouge
-      bad_links.each do |durl|
-        url = durl[:url]
-        puts "- #{url.uri_string} (#{url. class_error} #{url.rvalue})".rouge
-        puts "  (dans #{durl[:owner].uri_string})".gris
-      end
-      puts "\nCes liens sont à corriger."
-    else
-      puts "🎉 TOUS LES LIENS SONT VALIDES. 👍".vert
-    end
-
-    if verbose?
-      puts "---\nLIENS VÉRIFIÉS\n#{'-'*14}".jaune
-      CHECKED_LINKS.each do |uri, duri|
-        deep = duri[:url].same_base? ? " [deep]" : ""
-        puts "- #{uri}#{duri[:error] ? " (#{duri[:error]})" : ""}#{deep}".send(duri[:ok] ? :vert : :rouge)
-      end
-      puts "\nHREF EXCLUS\n#{'-'*11}".jaune
-      EXCLUDED_LINKS.each do |href, dhref|
-        puts "- #{href} (#{dhref[:raison]})".orange
-      end
-    end
-
   end
 
   # @return true si le lien n’a pas été trouvé

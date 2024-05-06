@@ -1,7 +1,6 @@
 
 LIB_FOLDER  = __dir__
 APP_FOLDER  = File.dirname(LIB_FOLDER)
-LOCALE_PATH = File.join(LIB_FOLDER,'locales')
 MODULES_PATH = File.join(LIB_FOLDER,'modules')
 
 LANG = 'fr'
@@ -9,8 +8,10 @@ LANG = 'fr'
 YAML_OPTIONS = {symbolize_names:true, aliases:true, permitted_classes:[Date,Integer,Float]}
 
 
-LOCALE_ERR_PATH = File.join(LOCALE_PATH,LANG,'errors.yaml')
-LOCALE_MSG_PATH = File.join(LOCALE_PATH,LANG,'messages.yaml')
+LOCALE_PATH     = File.join(LIB_FOLDER,'locales')
+LOCALES_FOLDER  = File.join(LOCALE_PATH,LANG)
+LOCALE_ERR_PATH = File.join(LOCALES_FOLDER,'errors.yaml')
+LOCALE_MSG_PATH = File.join(LOCALES_FOLDER,'messages.yaml')
 # ERRORS = YAML.safe_load(IO.read(LOCALE_ERR_PATH), **YAML_OPTIONS)
 ERRORS = YAML.safe_load(IO.read(LOCALE_ERR_PATH))
 # MESSAGES = YAML.safe_load(IO.read(LOCALE_MSG_PATH), **YAML_OPTIONS)
