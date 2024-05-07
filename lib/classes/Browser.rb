@@ -25,10 +25,14 @@ class << self
     begin
       driver.get link.url
     rescue Exception => e
-      return "Impossible d’atteindre la page #{link.url.inspect} : #{e.message} [#{e.class}]\n#{link.sources_for_error}"
+      return "Impossible d’atteindre la page #{link.url.inspect} : #{e.message} [#{e.class}]"
     end
     # On attend le chargement de la page
-    wait.until { driver.find_element(css: "body") }
+    begin
+      wait.until { driver.find_element(css: "BODY,body") }
+    rescue Selenium::WebDriver::Error::TimeoutError => e
+
+      
     # On check la page
     if link.url.match?(/amazon\./)
       check_as_amazon_page(link)

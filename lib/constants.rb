@@ -29,3 +29,4 @@ class TimeoutError < StandardError; end
 class KnownNetError < StandardError; end
 class NotCheckableLink < StandardError; end
 class UnknownError < StandardError; end
+class UrlError < StandardError; end

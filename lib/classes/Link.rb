@@ -62,6 +62,11 @@ class Link
       raise NotCheckableLink.new(erreur)
     end
 
+    # Si c’est un lien dont on n’a pas pu déterminer l’URL
+    if url == :UNDEFINED_URL
+      raise NotCheckableLink.new(@error)
+    end
+
     begin
       uri = URI(url)
     rescue URI::InvalidURIError => e
@@ -135,7 +140,7 @@ class Link
     STDOUT.write(POINT_GRIS)
     @motif_not_check = e.message
     return true
-  rescue UnknownNetError => e
+  rescue UnknownError => e
     STDOUT.write(POINT_ROUGE)
     @error = e.message
     log("ERREUR INCONNUE : #{e.message}")
@@ -241,8 +246,17 @@ class Link
         cuni = cuni[1..-1] if cuni.start_with?('.')
         cuni = cuni[1..-1] if cuni.start_with?('/')
         cuni = cuni.split('#')[0]
+        if base.nil?
+          raise UrlError.new("La base ne peut être NIL…")
+        end
+        if cuni.nil?
+          raise UrlError.new("L’URL relative calculée à partir de #{ini_uri.inspect} est NIL. Impossible de calculer l’URL du [LinksChecker::link ##{object_id}]")
+        end
         File.join(base, cuni)
       end.freeze
+    rescue UrlError => e
+      @error = e.message
+      :UNDEFINED_URL
     end
   end
 
