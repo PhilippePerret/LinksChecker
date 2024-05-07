@@ -47,12 +47,16 @@ class << self
     rescue Interrupt => e
       report_on_interrupt
     rescue Exception => e
-      puts "e : #{e.message}"
-      puts "class erreur : #{e.class}"
-      puts "#{e.backtrace.join("\n")}"
+      err = LOG_ERROR % {m:e.message,c:e.class, b:e.backtrace.join(RET)}
+      log(err)
+      puts err.rouge
     end
   end
 
+  LOG_ERROR = <<~TXT.freeze
+  # ERROR: %{m} [%{c}]
+  %{b}
+  TXT
 
   ##
   # Affiche le rapport de check du lien 
@@ -95,7 +99,7 @@ class << self
   def report_on_interrupt
     clear
     puts "Interruption du test… Rapport actuel :"
-    Checker::CHECKED_LINKS.each do |uri, duri|
+    LinksChecker::CHECKED_LINKS.each do |uri, duri|
       puts "URI : #{uri}"
     end
   end

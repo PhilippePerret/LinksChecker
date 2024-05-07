@@ -8,17 +8,18 @@ class Page
   # qu’élément HTML
 
 
-  # [LinksChecker::Link] La lien virtuel contenant la page
-  # Plus exactement : qui permet d’obtenir la page courante
-  attr_reader :owner_link
+  # [LinksChecker::Link] Le link contenant la page
+  # Plus exactement : qui permet d’obtenir la page HTML courante,
+  # qui y conduit quand elle a pu être lue.
+  attr_reader :source
 
   # [String] Le code HTML complet de la page
   # Noter que ça peut être une page contenant une erreur et ne 
   # correspondant pas à la page recherchée.
   attr_reader :code_html
 
-  def initialize(owner_link, code_html)
-    @owner_link = owner_link
+  def initialize(source, code_html)
+    @source     = source
     @code_html  = code_html
   end
 
@@ -32,30 +33,43 @@ class Page
   # Méthode permettant de relever tous les liens HREF dans la page
   # et de les injecter dans les liens à contrôler
   # 
+  # @note
+  #   Nokogiri est déficiant ici car il remplace les :
+  #     ?s=var&t=valeur&x=autre
+  #   … par :
+  #     ?s=var=valeur=autre
+  # 
   def get_and_check_all_links_in_code
-    html.css("BODY,body").css("*[href]").map do |node|
-      href = node.attribute('href').to_s
-      href = href.split('#')[0] if href.match?(/\#/)
-      # Link.new(href, base, owner_link)
-      LinksChecker.add_link_to_check(href, base, owner_link)
+    body.scan(REG_HREF).map do |href| 
+      LinksChecker.add_link_to_check(href[0], base, source)
     end
+  end
+  REG_HREF = /href=\"(.+?)\"/.freeze
 
-    # code_html.scan(/href="(.+?)"/i).each do |find|
-    #   href = find[0]
-    #   thelink = Link.new(href, self)
-    #   if (err = self.class.href_uncheckable?(href)).nil?
-    #     puts "Bon: #{href}".vert
-    #   else
-    #     EXCLUDED_LINKS << thelink
-    #     puts "Bad: #{href} (#{err})".rouge
-    #   end
-    # end
+  def body
+    @body ||= begin
+      code_html_min = code_html.downcase
+      input = code_html_min.index('<body'.freeze)
+      if input.nil?
+        # <= On ne trouve pas la balise body
+        # => On retourne le code entier
+        return code_html_min
+      end
+      input   = code_html_min.index('>'.freeze, input)
+      output  = code_html_min.index('</body>')
+      code_html[input+1...output]
+    end
   end
 
   # -- Predicate Methods --
 
   def contains?(selector)
     res = html.css("BODY,body").css(selector)
+    return not(res.empty?)
+  end
+
+  def head_contains?(selector)
+    res = html.css("HEAD,head").css(selector)
     return not(res.empty?)
   end
 
@@ -74,7 +88,9 @@ class Page
     end
   end
 
-  REG_BASE = /<base href="(.+)">/
+  REG_BASE = /<base href="(.+)">/.freeze
+
+
 end #/class Page
 end #/class Link
 end #/module LinksChecker

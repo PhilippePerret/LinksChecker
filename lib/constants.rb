@@ -22,4 +22,10 @@ POINT_VERT = '.'.vert.freeze
 POINT_ROUGE = '.'.rouge.freeze
 POINT_GRIS = '.'.gris.freeze
 
+
+RET = "\n".freeze
+
 class TimeoutError < StandardError; end
+class KnownNetError < StandardError; end
+class NotCheckableLink < StandardError; end
+class UnknownError < StandardError; end

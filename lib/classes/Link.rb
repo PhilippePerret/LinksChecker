@@ -10,9 +10,12 @@ class Link
   # count permet de savoir combien de fois elle a été appelée
   # 
 
-  # [Array[LinksChecker::Link]] Array de URI de toutes les sources 
+  # [Array<LinksChecker::Link>] Array de URI de toutes les sources 
   # qui contiennent ce lien.
   attr_reader :sources
+
+  # [LinksChecker::Link] La première source
+  attr_reader :source
 
   # [String] La base du lien, qui peut être défini dans la page
   # Dans le cas contraire, c’est la base LinksChecker@base.
@@ -26,19 +29,21 @@ class Link
   attr_reader :success
   # [String|NilClass] L’erreur rencontrée (if any)
   attr_reader :error
-  # [String|NilClass] Contient la raison de l’inaccessibilité du lien
-  attr_reader :inaccessibility
+  # [String|NilClass] Contient le motif éventuel pour lequel le lien
+  # n’a pas été checké
+  attr_reader :motif_not_check
 
   def initialize(ini_uri, base, source)
     @base     = base
     @ini_uri  = ini_uri
     # Les sources qui sont identiques
     # (pas sûr que ça serve à quelque chose)
-    @sources  = [] 
+    @sources  = []
+    @source   = source
     if source.nil?
-      @isorigine = true
+      @isorigine = :TRUE
     else
-      @isorigine = false
+      @isorigine = :FALSE
       @sources << source unless source.nil?
     end
   end
@@ -50,15 +55,33 @@ class Link
   # une page contenant d’autres liens ?)
   # 
   def check
-    @success = false # par défaut
-    @inaccessibility = nil # par défaut
-    
-    uri = URI(url)
+    log("-> check avec #{url.inspect}")
+
+    # Si c’est un lien à éviter
+    if (erreur = self.class.href_uncheckable?(ini_uri))
+      raise NotCheckableLink.new(erreur)
+    end
+
+    begin
+      uri = URI(url)
+    rescue URI::InvalidURIError => e
+      if url.start_with?('https://fr.wikipedia')
+        check_with_browser("Invalid URI: #{e.message}")
+      else
+        raise KnownNetError.new("Invalid URI: #{e.message}")
+      end
+    rescue Exception => e
+      raise UnknownError.new("Erreur URI inconnue : #{e.message} [#{e.class}]\nIl faut la prendre en compte ici : #{__FILE__}:#{__LINE__}")
+    end
+
     begin
       response = Net::HTTP.get_response(uri)
     rescue SocketError => e
-      @inaccessibility = "Socket Error".rouge
-      return false
+      raise KnownNetError.new("Socket Error: #{e.message}")
+    rescue NoMethodError => e
+      raise KnownNetError.new("No Method Error: #{e.message}")
+    rescue Exception => e
+      raise UnknownError.new("Erreur HTTP inconnue : #{e.message} [#{e.class}]\nIl faut la prendre en compte ici : #{__FILE__}:#{__LINE__}")
     end
 
     # Étude de la réponse
@@ -73,8 +96,10 @@ class Link
       # charge, évidemment.
       # @note: response.body contient tout le code HTML, en fait
       @page = Page.new(self, response.body)
+
+      # Validité de la page
       if (error = LinksChecker.page_invalid?(@page))
-        @error = error
+        raise KnownNetError.new(error)
       else
         # 
         # === SUCCÈS ===
@@ -83,33 +108,77 @@ class Link
         # "flat" — pas "deep" et que la source de ce lien n’est pas
         # nil)
         @success = true
-        if not(App.option?(:flat)) || origine?
+        STDOUT.write(POINT_VERT)
+        unless App.option?(:flat) && not(origine?) && not(in_base?)
           page.get_and_check_all_links_in_code
         else
-          puts "On ne check pas les liens car :"
-          puts "la source n’est pas nil (#{sources.inspect}" unless sources.nil?
-          puts "L’option :flat n’est pas activée" unless App.option?(:flat)
-          sleep 5
+          motif = not(in_base? ? MOTIF_PAGE_HORS_SITE : MOTIF_OPTION_FLAT)
+          log(LOG_LINK_NOT_CHECKED % {i:self.object_id,u:url.inspect,m:motif})
         end
       end
     when Net::HTTPMovedPermanently
-      @inaccessibility = "Déplacer de façon permanente."
+      check_with_browser("Moved Permanently")
     when Net::HTTPNotFound
-      @inaccessibility = "URL non trouvée"
+      raise KnownNetError.new("HTTP Not Found")
+    when Net::HTTPInternalServerError
+      check_with_browser("Internal Server Error")
+    when Net::HTTPServiceUnavailable
+      check_with_browser("Service Unavailable")
+    when Net::HTTPForbidden
+      check_with_browser("HTTP Forbidden")
     else
-      @inaccessibility = "#{response.class}"
-      puts "La réponse est de type #{response.class}".rouge
+      raise UnknownError.new("#{response.class}\nIl faut la prendre en compte ici : #{__FILE__}:#{__LINE__}")
     end
 
-    @success
+  rescue NotCheckableLink => e
+    @success = true
+    STDOUT.write(POINT_GRIS)
+    @motif_not_check = e.message
+    return true
+  rescue UnknownNetError => e
+    STDOUT.write(POINT_ROUGE)
+    @error = e.message
+    log("ERREUR INCONNUE : #{e.message}")
+    return false
+  rescue KnownNetError => e
+    STDOUT.write(POINT_ROUGE)
+    @error = e.message
+    log("ERREUR NORMALE : #{e.message}")
+    return false
+  else
+    return true
   end
 
+  # On passe par ici quand c’est une lien Amazon, par exemple,
+  # qui interdit d’atteindre ses pages sans navigateur
+  def check_with_browser(erreur)
+    case (retour = Browser.check_with_browser(self))
+    when true   then @success = true
+    when false  then raise KnownNetError.new(erreur)
+    when String then raise KnownNetError.new(retour)
+    else
+      raise "Je ne sais pas interpréter le retour de Browser#check_with_browser"
+    end
+    
+  end
+
+  LOG_LINK_NOT_CHECKED = <<~TXT.strip.freeze
+  Link non checké [LinksChecker::Link #%{i}]
+  TAB  URL  : %{u}
+  TAB  MOTIF: %{m}
+  TXT
+  MOTIF_OPTION_FLAT     = "Options -f/--flat et pas le lien originel.".freeze
+  MOTIF_PAGE_HORS_SITE  = "Page hors-site"
+
+  # -- Helper Methods --
+
+  # Pour afficher les sources dans un message d’erreur
+  def sources_for_error(tab = '')
+    stab = "\n#{tab}  - "
+    "#{tab}Sources :#{stab}" + sources.map{|s| s.url}.join(stab)
+  end
 
   # -- Predicate Methods --
-
-  def accessible?
-    @inaccessibility == nil
-  end
 
   def success?
     success === true
@@ -119,6 +188,12 @@ class Link
   # (pour savoir, quand c’est :flat, s’il faut traiter ses liens)
   def origine?
     :TRUE === @isorigine
+  end
+
+  # @return true si le lien concerne une page du site ou de
+  # la partie du site checkée
+  def in_base?
+    url.start_with?(LinksChecker.base)
   end
 
   # -- Links Methods --

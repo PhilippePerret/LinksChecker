@@ -25,14 +25,27 @@ class << self
     # La page de départ
     add_link_to_check(uri, base, nil)
 
+    # 
+    # == Contrôle de tous les liens ==
+    # 
     while link = LINKS_TO_CHECK.shift
       break if link.nil?
-      if CHECKED_LINKS.key?(link.url)
+      is_known_link = CHECKED_LINKS.key?(link.url)
+      log(LOG_CHECKED_LINK % {i:link.object_id, u:link.url.inspect, k: (is_known_link ? "KNOWN LINK [Link ##{CHECKED_LINKS[link.url].object_id}" : "NEW LINK")})
+      if is_known_link
+        #
         # HREF déjà connu
-        first_link = CHECKED_LINKS[link.url]
-        first_link.sources << link.sources.first
+        # 
+        # => On ajoute simplement la source
+        # 
+        known_link = CHECKED_LINKS[link.url]
+        known_link.sources << link.sources.first
+        STDOUT.write(POINT_GRIS)
         next
       else
+        #
+        # Nouveau HREF
+        # 
         CHECKED_LINKS.merge!(link.url => link)
         # On doit checker ce lien
         link.check
@@ -41,13 +54,32 @@ class << self
 
   end
 
+  LOG_CHECKED_LINK = <<~TXT.strip.freeze
+  CHECK LINK [LinksChecker::Link #%{i}] %{u}
+  TAB %{k}
+  TXT
+  
   # Pour ajouter un lien à checker
+  # 
+  # @note
+  #   On les met absolument tous, même si ce sont des liens déjà
+  #   checkés. C’est ensuite seulement qu’on procède à la simpli-
+  #   fication et qu’on ne checke que les url non traitées.
   # 
   def add_link_to_check(uri, base, source)
     link = Link.new(uri, base, source)
+    log(LOG_ADD_LINK_TO_CHECK % {i: link.object_id, u:uri.inspect, b:base.inspect, s:"#{source.class} ##{source.object_id}", l:link.url})
     LINKS_TO_CHECK << link
     return link
   end
+
+  LOG_ADD_LINK_TO_CHECK = <<~TXT.freeze
+  LINKS_TO_CHECK << link [Link #%{i}]
+  TAB  uri :   %{u}
+  TAB  base:   %{b}
+  TAB  url :   %{l}
+  TAB  source: [%{s}]
+  TXT
 
   # Pour afficher le résultat final
   # 
@@ -61,6 +93,7 @@ class << self
       puts "- #{url}".send(link.success? ? :vert : :rouge)
       unless link.success?
         puts "  #{link.error}".rouge
+        puts link.sources_for_error('  ').orange
       end
     end    
   end
