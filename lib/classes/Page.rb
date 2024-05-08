@@ -39,9 +39,14 @@ class Page
   #   … par :
   #     ?s=var=valeur=autre
   # 
+  # @return [Anything]
+  # 
   def get_and_check_all_links_in_code
-    body.scan(REG_HREF).map do |href| 
-      LinksChecker.add_link_to_check(href[0], base, source)
+    hfl = {} # Pour Href Found List
+    body.scan(REG_HREF).each do |href| 
+      href = href[0]
+      hfl.key?(href) ? next : hfl.merge!(href => true)
+      LinksChecker.add_link_to_check(href, base, source)
     end
   end
   REG_HREF = /href=\"(.+?)\"/.freeze

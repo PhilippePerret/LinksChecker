@@ -190,8 +190,9 @@ class Link
 
   # Pour afficher les sources dans un message d’erreur
   def detailled_sources(tab = '')
+    return "#{tab}Sources : aucune (origine)" if origine?
     stab = "\n#{tab}  - "
-    "#{tab}Sources :#{stab}" + sources.map{|s| s.url}.join(stab)
+    "#{tab}Sources (#{count}) :#{stab}" + sources.map{|s| s.url}.join(stab)
   end
 
   # -- Predicate Methods --

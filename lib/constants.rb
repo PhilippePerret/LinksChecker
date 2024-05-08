@@ -22,6 +22,7 @@ POINT_VERT = '.'.vert.freeze
 POINT_ROUGE = '.'.rouge.freeze
 POINT_GRIS = '.'.gris.freeze
 
+SIMPLE_TIME_FORMAT = '%d %m %Y - %H:%M:%S'.freeze
 
 RET = "\n".freeze
 

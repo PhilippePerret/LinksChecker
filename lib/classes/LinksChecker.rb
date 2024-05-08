@@ -14,6 +14,9 @@ class << self
   # [Array<Link>] Pour mettre les href exclus
   EXCLUDED_LINKS  = []
 
+  # Pour mettre les erreurs dans le rapport final
+  TABLEAU_DES_ERREURS = []
+
   # = main =
   # 
   # Méthode principale qui checke tous les liens.
@@ -84,26 +87,78 @@ class << self
   # Pour afficher le résultat final
   # 
   def display_report
+    # S’il faut afficher les sources
     afficher_sources = App.option?(:sources)
+
+    # Calcul du nombre d’erreurs rencontrées
+    nombre_erreurs = 0
+    CHECKED_LINKS.each do |url, link|
+      link.success? || (nombre_erreurs += 1)
+    end
+    nombre_erreurs_str = nombre_erreurs.to_s.send(nombre_erreurs > 0 ? :rouge : :vert)
+
+    unless verbose?
+      clear clear
+    end
+
+    # 
+    # Tableau final
+    # 
     puts "\n---".bleu
-    puts "RÉSULTATS\n---------".bleu
-    puts "Nombre de liens checkés : #{CHECKED_LINKS.count}".bleu
+    titre = "RÉSULTAT DU CHECK DES LIENS DU #{Time.now.strftime(SIMPLE_TIME_FORMAT)}"
+    puts "#{titre}\n#{'-'*titre.length}".bleu
+    puts "NOMBRE DE LIENS CHECKÉS : #{CHECKED_LINKS.count}".bleu
+    puts "ERREURS RENCONTRÉES     : #{nombre_erreurs_str}".bleu
     puts "\n---".bleu
     puts "LIENS CHECKÉS\n#{'-'*13}".bleu
-    CHECKED_LINKS.each do |url, link|
+
+    index_len = 2 + CHECKED_LINKS.count.to_s.length
+    tab_info  = ' ' * (index_len + 1)
+
+    TABLEAU_DES_ERREURS.clear
+
+    # Boucle sur tous les liens checkés
+    CHECKED_LINKS.each_with_index do |dlink, idx|
+      
+      url, link = dlink
+      failed = not(link.success?)
+
+      # La couleur en fonction du succès du lien
       color = link.success? ? :vert : :rouge
-      puts "- #{url}".send(color)
-      if afficher_sources
-        puts link.detailled_sources('  ').send(color)
+
+      # L’index du lien
+      index_lien = "[#{idx+1}]".ljust(index_len)
+      
+      # Titre du lien
+      str = "#{index_lien} #{url}".send(color) 
+      puts str
+      TABLEAU_DES_ERREURS << str if failed
+
+      # En cas d’échec, on affiche l’erreur
+      if failed
+        str = "  #{link.error || "- erreur indéfinie -"}".rouge
+        puts str
+        TABLEAU_DES_ERREURS << str
+      end
+
+      # Sources (nombre ou détail)
+      if afficher_sources || failed
+        str = link.detailled_sources(tab_info).send(color)
+        puts str
+        TABLEAU_DES_ERREURS << str if failed
       else
-        puts "  Sources: #{link.count}".send(color)
+        puts "#{tab_info}Sources : #{link.count}".send(color)
       end
-      unless link.success?
-        puts "  #{link.error || "- erreur indéfinie -"}".rouge
-        puts link.detailled_sources('  ').orange
-      end
-    end    
-  end
+    end #/boucle sur CHECKED_LINKS
+  
+    # On remet les erreurs à la fin si on en a trouvées.
+    if TABLEAU_DES_ERREURS.any?
+      puts TABLEAU_DES_ERREURS.join("\n")
+    else
+      puts "\n\nAucune erreur rencontrée. Tous les liens sont valides.".vert
+    end
+
+  end #/display_report
 
 
   # Définir la base de la recherche, qui n’est pas forcément la
