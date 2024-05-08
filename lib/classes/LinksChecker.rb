@@ -96,6 +96,7 @@ class << self
       link.success? || (nombre_erreurs += 1)
     end
     nombre_erreurs_str = nombre_erreurs.to_s.send(nombre_erreurs > 0 ? :rouge : :vert)
+    zero_erreurs = nombre_erreurs == 0
 
     unless verbose?
       clear clear
@@ -107,6 +108,11 @@ class << self
     puts "\n---".bleu
     titre = "RÉSULTAT DU CHECK DES LIENS DU #{Time.now.strftime(SIMPLE_TIME_FORMAT)}"
     puts "#{titre}\n#{'-'*titre.length}".bleu
+    
+    # Origine
+    puts "ORIGINE : #{App.origine}".bleu
+
+    # Titre des liens checkés
     puts "LIENS CHECKÉS\n#{'-'*13}".bleu
 
     index_len = 2 + CHECKED_LINKS.count.to_s.length
@@ -167,11 +173,17 @@ class << self
     end
 
     # Le résumé final
-    puts "---".bleu
+    puts "\n\n"
     puts "RÉSUMÉ FINAL".bleu
     puts "------------".bleu
-    puts "NOMBRE DE LIENS CHECKÉS : #{CHECKED_LINKS.count}".bleu
-    puts "NOMBRE TOTAL D’ERREURS  : #{nombre_erreurs_str}".bleu
+    puts "ORIGINE : #{App.origine}".jaune
+    puts "MODE    : #{en_mode_deep ? "PROFOND" : "PAGE SEULE"}".bleu
+    puts "NOMBRE DE LIENS CHECKÉS  : #{CHECKED_LINKS.count}".bleu
+    if zero_erreurs
+      puts "🍺 Tous les liens/pages testés sont valides".vert
+    else
+      puts "💣 NOMBRE TOTAL D’ERREURS : #{nombre_erreurs_str}".bleu
+    end
     puts "---".bleu
 
   end #/display_report

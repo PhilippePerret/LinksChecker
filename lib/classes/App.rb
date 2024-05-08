@@ -9,6 +9,9 @@ class << self
 
   attr_reader :options
 
+  # [String] Origine (lien) fournie au départ
+  attr_reader :origine
+
   # -- Predicate Methods --
 
   def option?(opt)
@@ -42,6 +45,7 @@ class << self
 
     # uri = Q.ask("URL à checker : ".jaune, **{default:'https://rien.com'})
     begin
+      @origine = uri
       LinksChecker.check_all_links_from(uri)
       LinksChecker.display_report
     rescue Interrupt => e
