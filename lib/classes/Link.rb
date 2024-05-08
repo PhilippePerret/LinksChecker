@@ -167,15 +167,28 @@ class Link
 
   # On passe par ici quand c’est une lien Amazon, par exemple,
   # qui interdit d’atteindre ses pages sans navigateur
-  def check_with_browser(erreur)
+  # 
+  # @note
+  #   On essaie toujours deux fois
+  # 
+  def check_with_browser(erreur, try = 1)
     case (retour = Browser.check_with_browser(self))
     when true   then @success = true
-    when false  then raise KnownNetError.new(erreur)
-    when String then raise KnownNetError.new(retour)
+    when false
+      return ressayer_with_browser(erreur) if try == 1
+      raise KnownNetError.new(erreur)
+    when String
+      return ressayer_with_browser(erreur) if try == 1
+      raise KnownNetError.new(retour)
     else
+      return ressayer_with_browser(erreur) if try == 1
       raise "Je ne sais pas interpréter le retour de Browser#check_with_browser"
     end
-    
+  end
+  def ressayer_with_browser(erreur)
+    sleep 1
+    Browser.reset
+    return check_with_browser(erreur, 2)
   end
 
   LOG_LINK_NOT_CHECKED = <<~TXT.strip.freeze

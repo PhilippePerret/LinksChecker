@@ -77,6 +77,11 @@ class << self
     return ok
   end
 
+  def reset
+    driver && driver.close
+    @driver = nil
+  end
+
   def driver
     @driver ||= Selenium::WebDriver.for(:firefox)
   end
