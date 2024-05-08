@@ -140,3 +140,8 @@
 6011: |
   %{a} n'est pas un Hash, c'est un %{c}…
 
+# --- Les erreurs de source ---
+
+7000: |
+  Le lien ne devrait contenir qu’une seule source, puisqu’on est en
+  mode flat…

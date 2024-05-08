@@ -111,6 +111,7 @@ class << self
 
     index_len = 2 + CHECKED_LINKS.count.to_s.length
     tab_info  = ' ' * (index_len + 1)
+    en_mode_deep = not(App.option?(:flat))
 
     TABLEAU_DES_ERREURS.clear
 
@@ -139,18 +140,26 @@ class << self
       end
 
       # Sources (nombre ou détail)
-      if afficher_sources || failed
-        str = link.detailled_sources(tab_info).send(color)
-        puts str
-        TABLEAU_DES_ERREURS << str if failed
+      if en_mode_deep
+        if afficher_sources || failed
+          str = link.detailled_sources(tab_info).send(color)
+          puts str
+          TABLEAU_DES_ERREURS << str if failed
+        else
+          puts "#{tab_info}Sources : #{link.count}".send(color)
+        end
       else
-        puts "#{tab_info}Sources : #{link.count}".send(color)
+        # Si on n’est pas en mode profond, on s’assure juste
+        # qu’il y a bien une seule source (l’origine donnée)
+        if link.count > 1
+          raise ERRORS[7000] % {n: link.count}
+        end
       end
     end #/boucle sur CHECKED_LINKS
   
     # On remet les erreurs à la fin si on en a trouvées.
     if TABLEAU_DES_ERREURS.any?
-      puts "\n---".bleu
+      puts "---".bleu
       tit = "LISTE DES ERREURS (#{nombre_erreurs})"
       puts tit.rouge
       puts ('-'*tit.length).rouge
@@ -158,12 +167,12 @@ class << self
     end
 
     # Le résumé final
-    puts "\n---\n".bleu
+    puts "---".bleu
     puts "RÉSUMÉ FINAL".bleu
     puts "------------".bleu
     puts "NOMBRE DE LIENS CHECKÉS : #{CHECKED_LINKS.count}".bleu
     puts "NOMBRE TOTAL D’ERREURS  : #{nombre_erreurs_str}".bleu
-    puts "\n---".bleu
+    puts "---".bleu
 
   end #/display_report
 

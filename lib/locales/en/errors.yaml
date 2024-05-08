@@ -135,3 +135,7 @@
 6011: |
   %{a} is not a Hash; it's a %{c}.
 
+# --- Les erreurs de source ---
+
+7000: |
+  In flat mode, link should have only one source. It gets %{n}.
