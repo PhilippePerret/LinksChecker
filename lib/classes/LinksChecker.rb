@@ -107,9 +107,6 @@ class << self
     puts "\n---".bleu
     titre = "RÉSULTAT DU CHECK DES LIENS DU #{Time.now.strftime(SIMPLE_TIME_FORMAT)}"
     puts "#{titre}\n#{'-'*titre.length}".bleu
-    puts "NOMBRE DE LIENS CHECKÉS : #{CHECKED_LINKS.count}".bleu
-    puts "ERREURS RENCONTRÉES     : #{nombre_erreurs_str}".bleu
-    puts "\n---".bleu
     puts "LIENS CHECKÉS\n#{'-'*13}".bleu
 
     index_len = 2 + CHECKED_LINKS.count.to_s.length
@@ -153,10 +150,20 @@ class << self
   
     # On remet les erreurs à la fin si on en a trouvées.
     if TABLEAU_DES_ERREURS.any?
+      puts "\n---".bleu
+      tit = "LISTE DES ERREURS (#{nombre_erreurs})"
+      puts tit.rouge
+      puts ('-'*tit.length).rouge
       puts TABLEAU_DES_ERREURS.join("\n")
-    else
-      puts "\n\nAucune erreur rencontrée. Tous les liens sont valides.".vert
     end
+
+    # Le résumé final
+    puts "\n---\n".bleu
+    puts "RÉSUMÉ FINAL".bleu
+    puts "------------".bleu
+    puts "NOMBRE DE LIENS CHECKÉS : #{CHECKED_LINKS.count}".bleu
+    puts "NOMBRE TOTAL D’ERREURS  : #{nombre_erreurs_str}".bleu
+    puts "\n---".bleu
 
   end #/display_report
 
