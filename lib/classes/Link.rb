@@ -75,6 +75,8 @@ class Link
       else
         raise KnownNetError.new("Invalid URI: #{e.message}")
       end
+    rescue Interrupt
+      raise Interrupt
     rescue Exception => e
       raise UnknownError.new("Erreur URI inconnue : #{e.message} [#{e.class}]\nIl faut la prendre en compte ici : #{__FILE__}:#{__LINE__}")
     end
@@ -85,6 +87,8 @@ class Link
       raise KnownNetError.new("Socket Error: #{e.message}")
     rescue NoMethodError => e
       raise KnownNetError.new("No Method Error: #{e.message}")
+    rescue Interrupt
+      raise Interrupt
     rescue Exception => e
       raise UnknownError.new("Erreur HTTP inconnue : #{e.message} [#{e.class}]\nIl faut la prendre en compte ici : #{__FILE__}:#{__LINE__}")
     end
@@ -93,9 +97,11 @@ class Link
     case response
     when Net::HTTPSuccess
       # 
-      # Cet lien a retourné un succès, c’est-à-dire que la page
-      # a pu être chargée. Mais ça n’est pas forcément la page
-      # attendue. Pour ça, il faut vérifier si les sélecteurs définis
+      # Ce lien a retourné un succès, c’est-à-dire que la page
+      # a pu être chargée. 
+
+      # Mais ça n’est pas forcément la page telle qu’attendue.
+      # Pour ça, il faut vérifier si les sélecteurs définis
       # par les paramètres (--exclude et --require) sont bien 
       # présents ou absents. C’est l’instance [Link::Page] qui s’en
       # charge, évidemment.
@@ -109,12 +115,14 @@ class Link
         # 
         # === SUCCÈS ===
         # 
+        log("SUCCÈS (#{url})")
         # (on peut checker ses liens — sauf si c’est un controle 
         # "flat" — pas "deep" et que la source de ce lien n’est pas
         # nil)
         @success = true
         STDOUT.write(POINT_VERT)
-        unless App.option?(:flat) && not(origine?) && not(in_base?)
+
+        if deep_checkable?
           page.get_and_check_all_links_in_code
         else
           motif = not(in_base? ? MOTIF_PAGE_HORS_SITE : MOTIF_OPTION_FLAT)
@@ -150,6 +158,9 @@ class Link
     @error = e.message
     log("ERREUR NORMALE : #{e.message}")
     return false
+  rescue Interrupt
+    @error = "Programme interrompu"
+    raise Interrupt
   else
     return true
   end
@@ -178,12 +189,24 @@ class Link
   # -- Helper Methods --
 
   # Pour afficher les sources dans un message d’erreur
-  def sources_for_error(tab = '')
+  def detailled_sources(tab = '')
     stab = "\n#{tab}  - "
     "#{tab}Sources :#{stab}" + sources.map{|s| s.url}.join(stab)
   end
 
   # -- Predicate Methods --
+
+  # @return true si c’est un lien deep-checkable, c’est-à-dire dont
+  # il faut checker les liens internes
+  def deep_checkable?
+    # On doit checker la page du lien en profondeur si et seulement
+    # si…
+    # L’option flat n’est pas activée et le lien est interne au site
+    # ou l’option falt est activée et c’est la page d’origine
+    !App.option?(:flat) && in_base? \
+    || App.option?(:flat) && origine?    
+  end
+
 
   def success?
     success === true

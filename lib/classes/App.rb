@@ -58,50 +58,10 @@ class << self
   %{b}
   TXT
 
-  ##
-  # Affiche le rapport de check du lien 
-  # 
-  def display_report
-
-    nombre_total = 0
-    CHECKED_LINKS.values.each {|d| nombre_total += d[:count] }
-    puts "Nombre de liens différents vérifiés  : #{CHECKED_LINKS.count}".bleu
-    puts "Nombre total de liens HREF consultés : #{nombre_total}".bleu
-    bad_links = CHECKED_LINKS.values.reject do |durl|
-      durl[:ok]
-    end
-    if bad_links.count > 0
-      puts "NOMBRE DE LIENS ERRONÉS : #{bad_links.count}".rouge
-      bad_links.each do |durl|
-        url = durl[:url]
-        puts "- #{url.uri_string} (#{url. class_error} #{url.rvalue})".rouge
-        puts "  (dans #{durl[:owner].uri_string})".gris
-      end
-      puts "\nCes liens sont à corriger."
-    else
-      puts "🎉 TOUS LES LIENS SONT VALIDES. 👍".vert
-    end
-
-    if verbose?
-      puts "---\nLIENS VÉRIFIÉS\n#{'-'*14}".jaune
-      CHECKED_LINKS.each do |uri, duri|
-        deep = duri[:url].same_base? ? " [deep]" : ""
-        puts "- #{uri}#{duri[:error] ? " (#{duri[:error]})" : ""}#{deep}".send(duri[:ok] ? :vert : :rouge)
-      end
-      puts "\nHREF EXCLUS\n#{'-'*11}".jaune
-      EXCLUDED_LINKS.each do |href, dhref|
-        puts "- #{href} (#{dhref[:raison]})".orange
-      end
-    end
-
-  end
-
   def report_on_interrupt
     clear
-    puts "Interruption du test… Rapport actuel :"
-    LinksChecker::CHECKED_LINKS.each do |uri, duri|
-      puts "URI : #{uri}"
-    end
+    puts "Interruption du test… Rapport actuel :".rouge
+    LinksChecker.display_report
   end
 
   # -- Functional Methods --
@@ -173,11 +133,12 @@ end #/ << self LinksChecker::App
 
 
   OPTS_SHORT_TO_LONG = {
+    'e' => :exclude,
+    'f' => :flat,
     'h' => :help,
     'i' => :infos,
-    'f' => :flat,
     'r' => :require,
-    'e' => :exclude,
+    's' => :sources,
     'v' => :verbose,
   }
 

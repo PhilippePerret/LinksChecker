@@ -84,16 +84,23 @@ class << self
   # Pour afficher le résultat final
   # 
   def display_report
+    afficher_sources = App.option?(:sources)
     puts "\n---".bleu
     puts "RÉSULTATS\n---------".bleu
     puts "Nombre de liens checkés : #{CHECKED_LINKS.count}".bleu
     puts "\n---".bleu
     puts "LIENS CHECKÉS\n#{'-'*13}".bleu
     CHECKED_LINKS.each do |url, link|
-      puts "- #{url}".send(link.success? ? :vert : :rouge)
+      color = link.success? ? :vert : :rouge
+      puts "- #{url}".send(color)
+      if afficher_sources
+        puts link.detailled_sources('  ').send(color)
+      else
+        puts "  Sources: #{link.count}".send(color)
+      end
       unless link.success?
-        puts "  #{link.error}".rouge
-        puts link.sources_for_error('  ').orange
+        puts "  #{link.error || "- erreur indéfinie -"}".rouge
+        puts link.detailled_sources('  ').orange
       end
     end    
   end

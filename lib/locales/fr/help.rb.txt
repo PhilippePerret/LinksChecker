@@ -35,13 +35,16 @@ Options
       si on doit exclure div.warning et div.error, on ajoute en 
       options : #{j'-e \'.warning\' -e \'.error\' '} 
 
-
   #{j'-r/--require \'<selector>\''} 
       Un ou plusieurs sélecteurs qu’il faut absolument trouver dans
       la page pour considérer qu’elle est bonne. Ça peut être par
       exemple le logo du site.
       Ajouter autant d’options que de sélecteurs requis :
       #{j'-r \'.logo\' -e \'.content.main\' '} 
+
+  #{j'-s/--sources \'<selector>\''} 
+      Si cette option est activée, toutes les sources sont 
+      indiquées dans le rapport final.
 
 
 Exemple avec fichier d’infos

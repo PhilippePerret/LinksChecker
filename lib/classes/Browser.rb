@@ -31,8 +31,9 @@ class << self
     begin
       wait.until { driver.find_element(css: "BODY,body") }
     rescue Selenium::WebDriver::Error::TimeoutError => e
+      return "La page ne contient pas de balise body…"
+    end
 
-      
     # On check la page
     if link.url.match?(/amazon\./)
       check_as_amazon_page(link)
